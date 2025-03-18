@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 
 const API_KEY = '015ede50e352d45d218acf05d48a6f05'; // 🔒 Replace with your OpenWeatherMap API key
