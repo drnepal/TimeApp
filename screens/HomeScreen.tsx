@@ -4,8 +4,9 @@ import FontAwesome from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import axios from "axios";
+import BottomNavBar from "./components/BottomNavBar";
 
-const API_KEY = "015ede50e352d45d218acf05d48a6f05"; // Replace with your OpenWeather API key
+const API_KEY = "015ede50e352d45d218acf05d48a6f05";
 const CHICAGO_COORDS = { latitude: 41.8781, longitude: -87.6298 };
 
 const HomeScreen: React.FC = () => {
@@ -36,51 +37,55 @@ const HomeScreen: React.FC = () => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
   };
 
+  const handleNavButtonPress = (button: string) => {
+    console.log(`Pressed: ${button}`);
+    // You can add navigation or specific logic here
+  };
+
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#000" />
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        <>
-          <Text style={styles.headerText}>Chicago Weather</Text>
+      <View style={styles.content}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#000" />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : (
+          <>
+            <Text style={styles.headerText}>Chicago Weather</Text>
 
-          <View style={styles.weatherCard}>
-            {/* Temperature */}
-            <Text style={styles.tempText}>{weather?.main.temp.toFixed(1)}°C</Text>
+            <View style={styles.weatherCard}>
+              <Text style={styles.tempText}>{weather?.main.temp.toFixed(1)}°C</Text>
 
-            {/* Weather Icon */}
-            <Image
-              source={{
-                uri: `https://openweathermap.org/img/wn/${weather?.weather[0]?.icon}@2x.png`,
-              }}
-              style={styles.weatherIcon}
-            />
+              <Image
+                source={{
+                  uri: `https://openweathermap.org/img/wn/${weather?.weather[0]?.icon}@2x.png`,
+                }}
+                style={styles.weatherIcon}
+              />
 
-            {/* Weather Details */}
-            <View style={styles.details}>
-              {/* Wind Speed */}
-              <View style={styles.detailItem}>
-                <MaterialCommunityIcons name="weather-windy" size={30} color="#fff" />
-                <Text style={styles.detailText}>{weather?.wind.speed} m/s</Text>
-              </View>
+              <View style={styles.details}>
+                <View style={styles.detailItem}>
+                  <MaterialCommunityIcons name="weather-windy" size={30} color="#fff" />
+                  <Text style={styles.detailText}>{weather?.wind.speed} m/s</Text>
+                </View>
 
-              {/* Humidity */}
-              <View style={styles.detailItem}>
-                <FontAwesome name="tint" size={30} color="#fff" />
-                <Text style={styles.detailText}>{weather?.main.humidity}%</Text>
-              </View>
+                <View style={styles.detailItem}>
+                  <FontAwesome name="tint" size={30} color="#fff" />
+                  <Text style={styles.detailText}>{weather?.main.humidity}%</Text>
+                </View>
 
-              {/* Sunrise */}
-              <View style={styles.detailItem}>
-                <Ionicons name="sunny-outline" size={30} color="#fff" />
-                <Text style={styles.detailText}>{convertTimestampToTime(weather?.sys.sunrise)}</Text>
+                <View style={styles.detailItem}>
+                  <Ionicons name="sunny-outline" size={30} color="#fff" />
+                  <Text style={styles.detailText}>{convertTimestampToTime(weather?.sys.sunrise)}</Text>
+                </View>
               </View>
             </View>
-          </View>
-        </>
-      )}
+          </>
+        )}
+      </View>
+
+      {/* Bottom Navigation Bar */}
+      <BottomNavBar onPress={handleNavButtonPress} />
     </View>
   );
 };
@@ -88,9 +93,14 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f0f8ff",
+    position: "relative",
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f8ff",
+    paddingBottom: 80, // leave space for nav bar
   },
   headerText: {
     fontSize: 24,
