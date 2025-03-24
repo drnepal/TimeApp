@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Image, ActivityIndicator, Alert } from "react-native";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import axios from "axios";
 
-const API_KEY = '015ede50e352d45d218acf05d48a6f05'; // 🔒 Replace with your OpenWeatherMap API key
+const API_KEY = "015ede50e352d45d218acf05d48a6f05"; // Replace with your OpenWeather API key
 const CHICAGO_COORDS = { latitude: 41.8781, longitude: -87.6298 };
 
 const HomeScreen: React.FC = () => {
@@ -11,89 +13,74 @@ const HomeScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchWeather = async (lat: number, lon: number) => {
-    try {
-      const response = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-      );
-      if (response.data) {
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const response = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${CHICAGO_COORDS.latitude}&lon=${CHICAGO_COORDS.longitude}&appid=${API_KEY}&units=metric`
+        );
         setWeather(response.data);
         setError(null);
-      } else {
-        setError('No weather data available.');
+      } catch (err) {
+        setError("Failed to fetch weather data.");
+        Alert.alert("Error", "Unable to fetch weather data");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('Failed to fetch weather data.');
-      Alert.alert('Error', 'Unable to fetch weather data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWeather(CHICAGO_COORDS.latitude, CHICAGO_COORDS.longitude);
+    };
+    fetchWeather();
   }, []);
 
   const convertTimestampToTime = (timestamp: number) => {
     const date = new Date(timestamp * 1000);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.homePage}>
-        <Text style={styles.headerText}>Chicago Weather</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        <>
+          <Text style={styles.headerText}>Chicago Weather</Text>
 
-        <View style={styles.weatherCard}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#fff" />
-          ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : (
-            <>
-              {/* Dynamic Weather Icon */}
-              <Image
-                source={{
-                  uri: `https://openweathermap.org/img/wn/${weather?.weather[0]?.icon}@2x.png`,
-                }}
-                style={styles.weatherIcon}
-              />
+          <View style={styles.weatherCard}>
+            {/* Temperature */}
+            <Text style={styles.tempText}>{weather?.main.temp.toFixed(1)}°C</Text>
 
-              <Text style={styles.weatherText}>
-                {weather ? `${weather.main.temp.toFixed(1)}°C` : 'Loading...'}
-              </Text>
+            {/* Weather Icon */}
+            <Image
+              source={{
+                uri: `https://openweathermap.org/img/wn/${weather?.weather[0]?.icon}@2x.png`,
+              }}
+              style={styles.weatherIcon}
+            />
 
-              <Text style={styles.cityText}>{weather?.name || 'Chicago'}</Text>
-
-              <View style={styles.weatherDetails}>
-                {/* Wind Speed */}
-                <View style={styles.weatherDetail}>
-                  <Icon name="wind" size={30} color="#fff" />
-                  <Text style={styles.weatherDetailText}>
-                    {weather ? `${weather.wind.speed} m/s` : 'Loading...'}
-                  </Text>
-                </View>
-
-                {/* Humidity */}
-                <View style={styles.weatherDetail}>
-                  <Icon name="tint" size={30} color="#fff" />
-                  <Text style={styles.weatherDetailText}>
-                    {weather ? `${weather.main.humidity}%` : 'Loading...'}
-                  </Text>
-                </View>
-
-                {/* Sunrise */}
-                <View style={styles.weatherDetail}>
-                  <Icon name="sun" size={30} color="#fff" />
-                  <Text style={styles.weatherDetailText}>
-                    {weather ? convertTimestampToTime(weather.sys.sunrise) : 'Loading...'}
-                  </Text>
-                </View>
+            {/* Weather Details */}
+            <View style={styles.details}>
+              {/* Wind Speed */}
+              <View style={styles.detailItem}>
+                <MaterialCommunityIcons name="weather-windy" size={30} color="#fff" />
+                <Text style={styles.detailText}>{weather?.wind.speed} m/s</Text>
               </View>
-            </>
-          )}
-        </View>
-      </View>
+
+              {/* Humidity */}
+              <View style={styles.detailItem}>
+                <FontAwesome name="tint" size={30} color="#fff" />
+                <Text style={styles.detailText}>{weather?.main.humidity}%</Text>
+              </View>
+
+              {/* Sunrise */}
+              <View style={styles.detailItem}>
+                <Ionicons name="sunny-outline" size={30} color="#fff" />
+                <Text style={styles.detailText}>{convertTimestampToTime(weather?.sys.sunrise)}</Text>
+              </View>
+            </View>
+          </View>
+        </>
+      )}
     </View>
   );
 };
@@ -101,66 +88,54 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f0f8ff', // Light blue background
-  },
-  homePage: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f8ff",
   },
   headerText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 20,
   },
   weatherCard: {
-    width: '90%',
+    width: "90%",
     padding: 20,
-    backgroundColor: '#ADD8E6',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    backgroundColor: "#3498db",
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 5,
   },
+  tempText: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 5,
+  },
   weatherIcon: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     marginBottom: 10,
   },
-  weatherText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginVertical: 10,
+  details: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    marginTop: 10,
   },
-  cityText: {
-    fontSize: 20,
-    color: '#fff',
-    marginBottom: 15,
+  detailItem: {
+    alignItems: "center",
   },
-  weatherDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  weatherDetail: {
-    alignItems: 'center',
-  },
-  weatherDetailText: {
-    color: '#fff',
+  detailText: {
+    color: "#fff",
     marginTop: 5,
     fontSize: 14,
   },
   errorText: {
-    fontSize: 18,
-    color: 'red',
-    textAlign: 'center',
+    fontSize: 16,
+    color: "red",
+    textAlign: "center",
   },
 });
 
