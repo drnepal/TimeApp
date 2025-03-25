@@ -1,10 +1,12 @@
+// ✅ HomeScreen.tsx (Updated)
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Image, ActivityIndicator, Alert } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import axios from "axios";
-import BottomNavBar from "./components/BottomNavBar";
+import BottomNavBar from "../components/BottomNavBar";
+import TopNavBar from "../components/TopNavBar"; // ✅ Added top navbar
 
 const API_KEY = "015ede50e352d45d218acf05d48a6f05";
 const CHICAGO_COORDS = { latitude: 41.8781, longitude: -87.6298 };
@@ -39,11 +41,15 @@ const HomeScreen: React.FC = () => {
 
   const handleNavButtonPress = (button: string) => {
     console.log(`Pressed: ${button}`);
-    // You can add navigation or specific logic here
   };
 
   return (
-    <View style={styles.container}>
+    
+    <View style={{ flex: 1 }}>
+      <TopNavBar showBack={false} showHome={false} />
+
+     {/* <TopNavBar showBack={true} showHome={true} /> */}
+{/* removing the duplicates */}
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
@@ -83,8 +89,6 @@ const HomeScreen: React.FC = () => {
           </>
         )}
       </View>
-
-      {/* Bottom Navigation Bar */}
       <BottomNavBar onPress={handleNavButtonPress} />
     </View>
   );
@@ -100,7 +104,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 80, // leave space for nav bar
+    paddingBottom: 80,
+    backgroundColor: "#f0f8ff",
   },
   headerText: {
     fontSize: 24,
