@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
-import { useAuth } from '../screens/AuthContext';
+import { View, TextInput, Button,  StyleSheet } from 'react-native';
+import { useAuth } from './AuthContext';
 
 const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState<string>('');
