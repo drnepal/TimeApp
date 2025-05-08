@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
+
+
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
@@ -119,6 +121,7 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
    implementation project(':react-native-vector-icons')  // Use a specific version
+   implementation project(':react-native-picker_picker')
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

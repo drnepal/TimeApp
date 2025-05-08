@@ -1,156 +1,147 @@
-// ✅ HomeScreen.tsx (Updated)
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, ActivityIndicator, Alert } from "react-native";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import axios from "axios";
-import BottomNavBar from "../components/BottomNavBar";
-import TopNavBar from "../components/TopNavBar"; // ✅ Added top navbar
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LayoutWrapper from '../components/LayoutWrapper';
+import WeatherCard from '../components/WeatherCard';
+import UpcomingAlarmsCard from '../components/UpcomingAlarmsCard';
+import { WEATHER_API_KEY } from '@env';
 
-const API_KEY = "015ede50e352d45d218acf05d48a6f05";
 const CHICAGO_COORDS = { latitude: 41.8781, longitude: -87.6298 };
 
-const HomeScreen: React.FC = () => {
-  const [weather, setWeather] = useState<any>(null);
+const HomeScreen = () => {
+  const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
+  const [isDaytime, setIsDaytime] = useState(true);
+  const [bedtime, setBedtime] = useState<Date | null>(null);
 
   useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const response = await axios.get(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${CHICAGO_COORDS.latitude}&lon=${CHICAGO_COORDS.longitude}&appid=${API_KEY}&units=metric`
-        );
-        setWeather(response.data);
-        setError(null);
-      } catch (err) {
-        setError("Failed to fetch weather data.");
-        Alert.alert("Error", "Unable to fetch weather data");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchWeather();
+    loadBedtime();
   }, []);
 
-  const convertTimestampToTime = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+  const fetchWeather = async () => {
+    try {
+      const response = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${CHICAGO_COORDS.latitude}&lon=${CHICAGO_COORDS.longitude}&units=metric&appid=${WEATHER_API_KEY}`
+      );
+      setWeather(response.data);
+      checkDayNight(response.data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Weather Error:', err);
+      setError('Failed to fetch weather data.');
+      Alert.alert('Error', 'Could not load weather data.');
+      setLoading(false);
+    }
   };
 
-  const handleNavButtonPress = (button: string) => {
-    console.log(`Pressed: ${button}`);
+  const checkDayNight = (data) => {
+    const now = Date.now() / 1000;
+    setIsDaytime(now > data.sys.sunrise && now < data.sys.sunset);
   };
+
+  const loadBedtime = async () => {
+    const stored = await AsyncStorage.getItem('bedtime');
+    if (stored) {
+      setBedtime(new Date(stored));
+    }
+  };
+
+  if (loading) {
+    return (
+      <LayoutWrapper navBarType="default">
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      </LayoutWrapper>
+    );
+  }
 
   return (
-    
-    <View style={{ flex: 1 }}>
-      <TopNavBar showBack={false} showHome={false} />
-
-     {/* <TopNavBar showBack={true} showHome={true} /> */}
-{/* removing the duplicates */}
-      <View style={styles.content}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#000" />
-        ) : error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : (
-          <>
-            <Text style={styles.headerText}>Chicago Weather</Text>
-
-            <View style={styles.weatherCard}>
-              <Text style={styles.tempText}>{weather?.main.temp.toFixed(1)}°C</Text>
-
-              <Image
-                source={{
-                  uri: `https://openweathermap.org/img/wn/${weather?.weather[0]?.icon}@2x.png`,
-                }}
-                style={styles.weatherIcon}
+    <LayoutWrapper navBarType="default">
+      <View style={styles.page}>
+        <View style={styles.topRow}>
+          <View style={styles.leftCard}>
+            {weather && (
+              <WeatherCard
+                weather={weather}
+                isDaytime={isDaytime}
+                location="Chicago"
+                showToggle={true}
               />
-
-              <View style={styles.details}>
-                <View style={styles.detailItem}>
-                  <MaterialCommunityIcons name="weather-windy" size={30} color="#fff" />
-                  <Text style={styles.detailText}>{weather?.wind.speed} m/s</Text>
-                </View>
-
-                <View style={styles.detailItem}>
-                  <FontAwesome name="tint" size={30} color="#fff" />
-                  <Text style={styles.detailText}>{weather?.main.humidity}%</Text>
-                </View>
-
-                <View style={styles.detailItem}>
-                  <Ionicons name="sunny-outline" size={30} color="#fff" />
-                  <Text style={styles.detailText}>{convertTimestampToTime(weather?.sys.sunrise)}</Text>
-                </View>
+            )}
+          </View>
+          {bedtime && (
+            <View style={styles.rightCard}>
+              <View style={styles.bedtimeCard}>
+                <Text style={styles.bedtimeLabel}>Bedtime</Text>
+                <Text style={styles.bedtimeText}>
+                  {new Date(bedtime).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
               </View>
             </View>
-          </>
-        )}
+          )}
+        </View>
+
+        <View style={styles.alarmsContainer}>
+          <UpcomingAlarmsCard />
+        </View>
       </View>
-      <BottomNavBar onPress={handleNavButtonPress} />
-    </View>
+    </LayoutWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  page: {
     flex: 1,
-    backgroundColor: "#f0f8ff",
-    position: "relative",
+    paddingTop: 30, // adds top spacing
   },
-  content: {
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    marginTop: 20,
+    
+  },
+  leftCard: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingBottom: 80,
-    backgroundColor: "#f0f8ff",
+    marginRight: 8,
   },
-  headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
+  rightCard: {
+    width: 140,
   },
-  weatherCard: {
-    width: "90%",
-    padding: 20,
-    backgroundColor: "#3498db",
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 5,
+  bedtimeCard: {
+    backgroundColor: '#FFF9C4',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  tempText: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 5,
-  },
-  weatherIcon: {
-    width: 80,
-    height: 80,
-    marginBottom: 10,
-  },
-  details: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginTop: 10,
-  },
-  detailItem: {
-    alignItems: "center",
-  },
-  detailText: {
-    color: "#fff",
-    marginTop: 5,
-    fontSize: 14,
-  },
-  errorText: {
+  bedtimeLabel: {
     fontSize: 16,
-    color: "red",
-    textAlign: "center",
+    color: '#FF9800',
+    fontWeight: '600',
+  },
+  bedtimeText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: '#333',
+  },
+  alarmsContainer: {
+    flex: 1,
+    marginTop: 20,
+    paddingHorizontal: 16,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

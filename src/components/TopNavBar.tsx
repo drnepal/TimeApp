@@ -1,27 +1,33 @@
-// components/TopNavBar.tsx
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-interface TopNavBarProps {
+interface Props {
   showBack?: boolean;
   showHome?: boolean;
+  customBackAction?: () => void;
 }
 
-const TopNavBar: React.FC<TopNavBarProps> = ({ showBack = false, showHome = false }) => {
+const TopNavBar: React.FC<Props> = ({ showBack, showHome, customBackAction }) => {
   const navigation = useNavigation();
+  const route = useRoute();
+
+  // Screens where top nav is completely hidden (like Home)
+  const hideTopNavOn = ['Home', 'Clock', 'Timer', 'Stopwatch', 'WorldClock', 'Sleep'];
+
+  if (hideTopNavOn.includes(route.name)) return null;
 
   return (
     <View style={styles.navBar}>
       {showBack && (
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={customBackAction ?? (() => navigation.goBack())}>
           <Ionicons name="arrow-back" size={28} color="#333" />
         </TouchableOpacity>
       )}
       <View style={{ flex: 1 }} />
       {showHome && (
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home' as never)}>
           <Ionicons name="home-outline" size={28} color="#333" />
         </TouchableOpacity>
       )}
@@ -36,7 +42,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 15,
     paddingTop: 45,
-    backgroundColor: '#f0f8ff',
+    backgroundColor: '#fff',
   },
 });
 
